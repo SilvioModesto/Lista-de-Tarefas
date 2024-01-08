@@ -12,14 +12,14 @@ export default function Admin() {
   const [tarefas, setTarefas] = useState([]);
 
   useEffect(() => {
-    async function loadTarefas(){
+    async function loadTarefas() {
       const userDetail = localStorage.getItem("@detailUser")
       setUser(JSON.parse(userDetail))
 
-      if(userDetail){
+      if (userDetail) {
         const data = JSON.parse(userDetail);
         const tarefaRef = collection(db, "tarefas")
-        const q = query(tarefaRef, orderBy("created", "desc"), where("userUid","==", data?.uid))
+        const q = query(tarefaRef, orderBy("created", "desc"), where("userUid", "==", data?.uid))
         const unsub = onSnapshot(q, (snapshot) => {
           let lista = [];
           snapshot.forEach((doc) => {
@@ -33,6 +33,7 @@ export default function Admin() {
           setTarefas(lista);
 
         })
+        return () => unsub();
       }
     }
 
@@ -42,62 +43,62 @@ export default function Admin() {
   async function handleRegister(e) {
     e.preventDefault();
 
-    if(tarefaInput === ''){
+    if (tarefaInput === '') {
       alert("Digite sua tarefa...")
       return;
     }
 
-    if(edit?.id){
+    if (edit?.id) {
       handleUpdateTarefa();
       return;
     }
 
-    await addDoc(collection(db,"tarefas"), {
+    await addDoc(collection(db, "tarefas"), {
       tarefa: tarefaInput,
       created: new Date(),
       userUid: user?.uid
     })
-    .then(()=>{
-      console.log("Tarefa Registrada")
-      setTarefaInput('')
-    })
-    .catch((error)=>{
-      console.log("Erro ao Registrar" + error)
-    })
+      .then(() => {
+        console.log("Tarefa Registrada")
+        setTarefaInput('')
+      })
+      .catch((error) => {
+        console.log("Erro ao Registrar" + error)
+      })
 
   }
 
-  async function handleLogout(){
+  async function handleLogout() {
     await signOut(auth)
   }
 
-  async function deleteTarefa(id){    
+  async function deleteTarefa(id) {
     const docRef = doc(db, "tarefas", id)
     await deleteDoc(docRef)
   }
 
-  async function editTarefa(item){    
+  async function editTarefa(item) {
     setTarefaInput(item.tarefa)
     setEdit(item);
   }
 
-  async function handleUpdateTarefa(){    
+  async function handleUpdateTarefa() {
     const docRef = doc(db, "tarefas", edit?.id)
     await updateDoc(docRef, {
       tarefa: tarefaInput
     })
-    .then(() => {
-      console.log("Tarefa Atualizada")
-      setTarefaInput('')
-      setEdit({})
-    })
-    .catch(() => {
-      console.log("Erro ao Atualizar")
-      setTarefaInput('')
-      setEdit({})
-    })
+      .then(() => {
+        console.log("Tarefa Atualizada")
+        setTarefaInput('')
+        setEdit({})
+      })
+      .catch(() => {
+        console.log("Erro ao Atualizar")
+        setTarefaInput('')
+        setEdit({})
+      })
   }
-  
+
   return (
     <div className="admin-container">
       <h1>Minhas tarefas</h1>
@@ -117,20 +118,20 @@ export default function Admin() {
           <button className="btn-register" type='submit'>Atualizar tarefa</button>
         ) : (
           <button className="btn-register" type='submit'>Registrar tarefa</button>
-        )}        
+        )}
       </form>
 
       {tarefas.map((item) => (
         <article className="list">
-        <p>{item.tarefa}</p>
-        <div>
-          <button onClick={() => editTarefa(item)}>Editar</button>
-          <button onClick={() => deleteTarefa(item.id)} className="btn-delete">Concluir</button>
-        </div>
-      </article>
+          <p>{item.tarefa}</p>
+          <div>
+            <button onClick={() => editTarefa(item)}>Editar</button>
+            <button onClick={() => deleteTarefa(item.id)} className="btn-delete">Concluir</button>
+          </div>
+        </article>
       ))}
 
-      <button onClick={ handleLogout } className="btn-logout">Sair</button>
+      <button onClick={handleLogout} className="btn-logout">Sair</button>
     </div>
   )
 }
